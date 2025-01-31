@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Display</title>
+    <style>
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Consolas, monaco, monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Displaying Python Code from GitHub</h1>
+
+<pre id="python-code"></pre>
+
+<script>
+    // URL to the raw Python file in your GitHub repository
+    const rawFileUrl = 'https://raw.githubusercontent.com/username/repository/branch/filename.py';
+
+    // Fetch the raw content of the file and display it in the <pre> tag
+    fetch(rawFileUrl)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('python-code').textContent = data;
+        })
+        .catch(error => {
+            console.error('Error fetching the file:', error);
+        });
+</script>
+
+</body>
+</html>
