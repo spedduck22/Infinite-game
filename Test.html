@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Combining Boxes</title>
+    <title>Multiplying Boxes</title>
     <style>
         .box {
             position: absolute;
@@ -14,53 +14,70 @@
             align-items: center;
             color: white;
             font-weight: bold;
+            font-size: 24px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
         }
 
-        #box1 {
-            background-color: #3498db;
-            left: 100px;
-            top: 100px;
-        }
-
-        #box2 {
-            background-color: #e74c3c;
-            left: 300px;
-            top: 100px;
-        }
-
-        .combined-box {
-            background-color: #9b59b6;
-        }
+        /* Different colors for different numbers */
+        .value-2 { background-color: #3498db; }
+        .value-4 { background-color: #2ecc71; }
+        .value-8 { background-color: #e74c3c; }
+        .value-16 { background-color: #9b59b6; }
+        .value-32 { background-color: #f1c40f; }
+        .value-64 { background-color: #e67e22; }
+        .value-128 { background-color: #1abc9c; }
     </style>
 </head>
 <body>
-    <div id="box1" class="box">Box 1</div>
-    <div id="box2" class="box">Box 2</div>
-
     <script>
-        const boxes = document.querySelectorAll('.box');
+        let boxCount = 0;
+
+        function createBox(value = 2, x = 100, y = 100) {
+            const box = document.createElement('div');
+            box.className = `box value-${value}`;
+            box.dataset.value = value;
+            box.textContent = value;
+            box.style.left = x + 'px';
+            box.style.top = y + 'px';
+            
+            // Add click handler for duplication
+            box.addEventListener('mousedown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    // Duplicate only on Ctrl/Cmd + click
+                    const rect = box.getBoundingClientRect();
+                    createBox(parseInt(box.dataset.value), rect.left + 120, rect.top);
+                    e.stopPropagation();
+                } else {
+                    // Regular click for dragging
+                    startDragging(e);
+                }
+            });
+
+            document.body.appendChild(box);
+            boxCount++;
+            return box;
+        }
+
+        // Create initial boxes
+        createBox(2, 100, 100);
+        createBox(2, 300, 100);
+
         let activeBox = null;
         let offsetX, offsetY;
-
-        // Drag functionality
-        boxes.forEach(box => {
-            box.addEventListener('mousedown', startDragging);
-        });
-
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDragging);
 
         function startDragging(e) {
             activeBox = e.target;
             offsetX = e.clientX - activeBox.offsetLeft;
             offsetY = e.clientY - activeBox.offsetTop;
+            e.preventDefault();
         }
 
         function drag(e) {
             if (activeBox) {
                 activeBox.style.left = (e.clientX - offsetX) + 'px';
                 activeBox.style.top = (e.clientY - offsetY) + 'px';
-                checkCollision();
+                checkCollisions();
             }
         }
 
@@ -68,43 +85,51 @@
             activeBox = null;
         }
 
-        function checkCollision() {
-            const box1 = document.getElementById('box1');
-            const box2 = document.getElementById('box2');
-
-            if (!box1 || !box2) return; // If boxes have been removed
-
-            const rect1 = box1.getBoundingClientRect();
-            const rect2 = box2.getBoundingClientRect();
-
-            if (rect1.left < rect2.right &&
-                rect1.right > rect2.left &&
-                rect1.top < rect2.bottom &&
-                rect1.bottom > rect2.top) {
-                combineBoxes(box1, box2);
-            }
-        }
-
-        function combineBoxes(box1, box2) {
-            // Create new combined box
-            const combinedBox = document.createElement('div');
-            combinedBox.className = 'box combined-box';
-            combinedBox.textContent = 'Combined!';
+        function checkCollisions() {
+            if (!activeBox) return;
             
-            // Position at the middle point between the two boxes
-            const x = (box1.offsetLeft + box2.offsetLeft) / 2;
-            const y = (box1.offsetTop + box2.offsetTop) / 2;
-            combinedBox.style.left = x + 'px';
-            combinedBox.style.top = y + 'px';
+            const boxes = document.querySelectorAll('.box');
+            const activeRect = activeBox.getBoundingClientRect();
+            const activeValue = parseInt(activeBox.dataset.value);
 
-            // Add drag functionality to new box
-            combinedBox.addEventListener('mousedown', startDragging);
+            boxes.forEach(otherBox => {
+                if (otherBox === activeBox) return;
 
-            // Remove original boxes and add combined box
-            box1.remove();
-            box2.remove();
-            document.body.appendChild(combinedBox);
+                const otherRect = otherBox.getBoundingClientRect();
+                const otherValue = parseInt(otherBox.dataset.value);
+
+                if (activeValue === otherValue && // Same values
+                    activeRect.left < otherRect.right &&
+                    activeRect.right > otherRect.left &&
+                    activeRect.top < otherRect.bottom &&
+                    activeRect.bottom > otherRect.top) {
+                    
+                    // Combine boxes
+                    const newValue = activeValue * 2;
+                    const newX = (activeRect.left + otherRect.left) / 2;
+                    const newY = (activeRect.top + otherRect.top) / 2;
+                    
+                    otherBox.remove();
+                    activeBox.remove();
+                    
+                    createBox(newValue, newX, newY);
+                    activeBox = null;
+                }
+            });
         }
+
+        // Add global event listeners
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+
+        // Add instructions
+        const instructions = document.createElement('div');
+        instructions.style.position = 'fixed';
+        instructions.style.top = '10px';
+        instructions.style.left = '10px';
+        instructions.style.fontFamily = 'Arial, sans-serif';
+        instructions.innerHTML = 'Ctrl+Click or Cmd+Click to duplicate a box<br>Drag matching boxes together to combine them';
+        document.body.appendChild(instructions);
     </script>
 </body>
 </html>
