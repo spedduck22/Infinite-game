@@ -1,74 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Code Display</title>
+    <title>Combining Boxes</title>
     <style>
-        pre {
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: Consolas, monaco, monospace;
-            font-size: 14px;
-            overflow-x: auto;
-        }
-        
-        #draggable {
+        .box {
             position: absolute;
             width: 100px;
             height: 100px;
-            background-color: #3498db;
-            color: white;
             cursor: move;
+            user-select: none;
             display: flex;
             justify-content: center;
             align-items: center;
-            user-select: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        #box1 {
+            background-color: #3498db;
+            left: 100px;
+            top: 100px;
+        }
+
+        #box2 {
+            background-color: #e74c3c;
+            left: 300px;
+            top: 100px;
+        }
+
+        .combined-box {
+            background-color: #9b59b6;
         }
     </style>
 </head>
 <body>
-    <h1>Infinite Game by @Hot_ani on Discord</h1>
-    
-    <div id="draggable">test</div>
-    <pre id="python-code"></pre>
+    <div id="box1" class="box">Box 1</div>
+    <div id="box2" class="box">Box 2</div>
 
     <script>
-        // URL to the raw Python file
-        const rawFileUrl = 'https://raw.githubusercontent.com/spedduck22/Infinite-game/refs/heads/main/Main.py';
-        
-        // Fetch and display code
-        fetch(rawFileUrl)
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('python-code').textContent = data;
-            })
-            .catch(error => {
-                console.error('Error fetching the file:', error);
-            });
-
-        // Dragging functionality
-        const draggable = document.getElementById('draggable');
+        const boxes = document.querySelectorAll('.box');
+        let activeBox = null;
         let offsetX, offsetY;
-        let isDragging = false;
 
-        draggable.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            offsetX = e.clientX - draggable.offsetLeft;
-            offsetY = e.clientY - draggable.offsetTop;
+        // Drag functionality
+        boxes.forEach(box => {
+            box.addEventListener('mousedown', startDragging);
         });
 
-        document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-                draggable.style.left = (e.clientX - offsetX) + 'px';
-                draggable.style.top = (e.clientY - offsetY) + 'px';
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+
+        function startDragging(e) {
+            activeBox = e.target;
+            offsetX = e.clientX - activeBox.offsetLeft;
+            offsetY = e.clientY - activeBox.offsetTop;
+        }
+
+        function drag(e) {
+            if (activeBox) {
+                activeBox.style.left = (e.clientX - offsetX) + 'px';
+                activeBox.style.top = (e.clientY - offsetY) + 'px';
+                checkCollision();
             }
-        });
+        }
 
-        document.addEventListener('mouseup', function() {
-            isDragging = false;
-        });
+        function stopDragging() {
+            activeBox = null;
+        }
+
+        function checkCollision() {
+            const box1 = document.getElementById('box1');
+            const box2 = document.getElementById('box2');
+
+            if (!box1 || !box2) return; // If boxes have been removed
+
+            const rect1 = box1.getBoundingClientRect();
+            const rect2 = box2.getBoundingClientRect();
+
+            if (rect1.left < rect2.right &&
+                rect1.right > rect2.left &&
+                rect1.top < rect2.bottom &&
+                rect1.bottom > rect2.top) {
+                combineBoxes(box1, box2);
+            }
+        }
+
+        function combineBoxes(box1, box2) {
+            // Create new combined box
+            const combinedBox = document.createElement('div');
+            combinedBox.className = 'box combined-box';
+            combinedBox.textContent = 'Combined!';
+            
+            // Position at the middle point between the two boxes
+            const x = (box1.offsetLeft + box2.offsetLeft) / 2;
+            const y = (box1.offsetTop + box2.offsetTop) / 2;
+            combinedBox.style.left = x + 'px';
+            combinedBox.style.top = y + 'px';
+
+            // Add drag functionality to new box
+            combinedBox.addEventListener('mousedown', startDragging);
+
+            // Remove original boxes and add combined box
+            box1.remove();
+            box2.remove();
+            document.body.appendChild(combinedBox);
+        }
     </script>
 </body>
 </html>
