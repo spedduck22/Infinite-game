@@ -51,7 +51,7 @@
             border-color: #3498db;
         }
 
-        /* Added styles for test box */
+        /* Modified styles for draggable test box */
         .test-box {
             position: fixed;
             top: 50%;
@@ -63,6 +63,8 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
             font-size: 18px;
+            cursor: move;
+            user-select: none;
         }
     </style>
 </head>
@@ -70,7 +72,7 @@
     <h1>Infinite Game by @Hot_ani on Discord</h1>
     
     <!-- Test Box -->
-    <div class="test-box">test</div>
+    <div class="test-box" draggable="true">test</div>
 
     <!-- Drag and Drop Section -->
     <div class="draggable-container">
@@ -96,7 +98,54 @@
                 console.error('Error fetching the file:', error);
             });
 
-        // Drag and Drop Logic
+        // Enhanced drag and drop logic for test box
+        const testBox = document.querySelector('.test-box');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        testBox.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target === testBox) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, testBox);
+            }
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+        }
+
+        // Original drag and drop logic for boxes
         const boxes = document.querySelectorAll('.box');
         const dropzone = document.querySelector('.dropzone');
 
