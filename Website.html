@@ -51,7 +51,19 @@
     <script>
         let boxCount = 0;
 
-        function createBox(value = 2, x = 100, y = 100) {
+        // Function to get the center position of the screen
+        function getCenterPosition() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const boxSize = 100; // Size of the box
+            return {
+                x: (screenWidth - boxSize) / 2,
+                y: (screenHeight - boxSize) / 2
+            };
+        }
+
+        function createBox(value = 2) {
+            const { x, y } = getCenterPosition();  // Center the box
             const box = document.createElement('div');
             box.className = `box value-${value}`;
             box.dataset.value = value;
@@ -78,8 +90,8 @@
         }
 
         // Create initial boxes
-        createBox(2, 100, 100);
-        createBox(2, 300, 100);
+        createBox(2);
+        createBox(2);
 
         let activeBox = null;
         let offsetX, offsetY;
