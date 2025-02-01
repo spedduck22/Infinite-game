@@ -1,7 +1,8 @@
 while True:
     import pygame
     from anthropic import Anthropic
-    API_KEY = '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'
+    API = input('')
+    API_KEY = API
     ai = Anthropic(api_key=API_KEY)
     item1 = input("Input 1: ")
     item2 = input("\nInput 2: ")
