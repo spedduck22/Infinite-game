@@ -1,171 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Multiplying Boxes</title>
-    <style>
-        .box {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            cursor: move;
-            user-select: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            border-radius: 8px;
-            transition: background-color 0.3s;
+function createBox(value = 2, x = 0, y = 0) {
+    const box = document.createElement('div');
+    box.className = 'box';
+    box.dataset.value = value;
+    box.textContent = value;
+    box.style.left = x + 'px';
+    box.style.top = y + 'px';
+
+    // Set background color based on the box value
+    box.style.backgroundColor = getBoxColor(value);
+
+    // Add click handler for duplication
+    box.addEventListener('mousedown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            // Duplicate only on Ctrl/Cmd + click
+            const rect = box.getBoundingClientRect();
+            createBox(parseInt(box.dataset.value), rect.left + 120, rect.top);
+            e.stopPropagation();
+        } else {
+            // Regular click for dragging
+            startDragging(e);
         }
+    });
 
-        /* Different colors for different numbers */
-        .value-2 { background-color: #3498db; }
-        .value-4 { background-color: #2ecc71; }
-        .value-8 { background-color: #e74c3c; }
-        .value-16 { background-color: #9b59b6; }
-        .value-32 { background-color: #f1c40f; }
-        .value-64 { background-color: #e67e22; }
-        .value-128 { background-color: #1abc9c; }
+    document.body.appendChild(box);
+    boxCount++;
+    return box;
+}
 
-        /* Styling for the API key input */
-        .api-key-container {
-            position: fixed;
-            top: 80px;
-            left: 10px;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            font-family: Arial, sans-serif;
-            border-radius: 8px;
-        }
+// Function to get a color based on the box value
+function getBoxColor(value) {
+    // Simple example of generating a color dynamically based on the value
+    const colors = [
+        '#3498db', // 2
+        '#2ecc71', // 4
+        '#e74c3c', // 8
+        '#9b59b6', // 16
+        '#f1c40f', // 32
+        '#e67e22', // 64
+        '#1abc9c'  // 128
+    ];
 
-        .api-key-container input {
-            padding: 5px;
-            font-size: 16px;
-            width: 200px;
-        }
-    </style>
-</head>
-<body>
-    <script>
-        let boxCount = 0;
-
-        // Function to get the center position of the screen
-        function getCenterPosition() {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const boxSize = 100; // Size of the box
-            return {
-                x: (screenWidth - boxSize) / 2,
-                y: (screenHeight - boxSize) / 2
-            };
-        }
-
-        function createBox(value = 2) {
-            const { x, y } = getCenterPosition();  // Center the box
-            const box = document.createElement('div');
-            box.className = `box value-${value}`;
-            box.dataset.value = value;
-            box.textContent = value;
-            box.style.left = x + 'px';
-            box.style.top = y + 'px';
-            
-            // Add click handler for duplication
-            box.addEventListener('mousedown', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    // Duplicate only on Ctrl/Cmd + click
-                    const rect = box.getBoundingClientRect();
-                    createBox(parseInt(box.dataset.value), rect.left + 120, rect.top);
-                    e.stopPropagation();
-                } else {
-                    // Regular click for dragging
-                    startDragging(e);
-                }
-            });
-
-            document.body.appendChild(box);
-            boxCount++;
-            return box;
-        }
-
-        // Create initial boxes
-        createBox(2);
-        createBox(2);
-
-        let activeBox = null;
-        let offsetX, offsetY;
-
-        function startDragging(e) {
-            activeBox = e.target;
-            offsetX = e.clientX - activeBox.offsetLeft;
-            offsetY = e.clientY - activeBox.offsetTop;
-            e.preventDefault();
-        }
-
-        function drag(e) {
-            if (activeBox) {
-                activeBox.style.left = (e.clientX - offsetX) + 'px';
-                activeBox.style.top = (e.clientY - offsetY) + 'px';
-                checkCollisions();
-            }
-        }
-
-        function stopDragging() {
-            activeBox = null;
-        }
-
-        function checkCollisions() {
-            if (!activeBox) return;
-            
-            const boxes = document.querySelectorAll('.box');
-            const activeRect = activeBox.getBoundingClientRect();
-            const activeValue = parseInt(activeBox.dataset.value);
-
-            boxes.forEach(otherBox => {
-                if (otherBox === activeBox) return;
-
-                const otherRect = otherBox.getBoundingClientRect();
-                const otherValue = parseInt(otherBox.dataset.value);
-
-                if (activeValue === otherValue && // Same values
-                    activeRect.left < otherRect.right &&
-                    activeRect.right > otherRect.left &&
-                    activeRect.top < otherRect.bottom &&
-                    activeRect.bottom > otherRect.top) {
-                    
-                    // Combine boxes
-                    const newValue = activeValue * 2;
-                    const newX = (activeRect.left + otherRect.left) / 2;
-                    const newY = (activeRect.top + otherRect.top) / 2;
-                    
-                    otherBox.remove();
-                    activeBox.remove();
-                    
-                    createBox(newValue, newX, newY);
-                    activeBox = null;
-                }
-            });
-        }
-
-        // Add global event listeners
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDragging);
-
-        // Add instructions
-        const instructions = document.createElement('div');
-        instructions.style.position = 'fixed';
-        instructions.style.top = '10px';
-        instructions.style.left = '10px';
-        instructions.style.fontFamily = 'Arial, sans-serif';
-        instructions.innerHTML = 'Ctrl+Click or Cmd+Click to duplicate a box<br>Drag matching boxes together to combine them';
-        document.body.appendChild(instructions);
-    </script>
-
-    <!-- API Key Input -->
-    <div class="api-key-container">
-        <label for="apiKey">API Key:</label>
-        <input type="text" id="apiKey" placeholder="Enter API key here" />
-    </div>
-</body>
-</html>
+    // If the value is larger than 128, generate a color based on its power of 2
+    if (value <= 128) {
+        return colors[Math.log2(value) - 1];
+    } else {
+        // Generate a color for values larger than 128
+        const shade = Math.min(255, 255 - (Math.log2(value) * 10));
+        return `rgb(${shade}, ${Math.floor(shade / 2)}, ${Math.floor(shade / 3)})`;
+    }
+}
